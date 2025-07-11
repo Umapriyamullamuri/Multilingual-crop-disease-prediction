@@ -1,0 +1,8 @@
+Django
+python
+NumPy
+Pandas
+scikit-learn
+SpeechRecognition
+googletrans
+Gunicorn
