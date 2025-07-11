@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crop Disease Predictor</title>
+</head>
+<body>
+    <h2>Crop Disease Prediction</h2>
+
+    <form method="POST" action="/predict/">
+        {% csrf_token %}
+        
+        <label>Symptom (Type or Speak):</label><br>
+        <input type="text" name="symptom" id="symptom" placeholder="e.g., yellow spots" required><br><br>
+
+        <label>Crop:</label><br>
+        <input type="text" name="crop" id="crop" placeholder="e.g., wheat" required><br><br>
+
+        <label>Language:</label><br>
+        <select name="lang">
+            <option value="en">English</option>
+            <option value="ta">Tamil</option>
+            <option value="hi">Hindi</option>
+            <option value="te">Telugu</option>
+        </select><br><br>
+
+        <button type="submit">Predict</button>
+        <button type="button" onclick="startSequentialSpeech()">Speak</button>
+    </form>
+    {% if spoken_text %}
+        <h3>You said:</h3>
+        <p>{{ spoken_text }}</p>
+    {% endif %}
+
+    {% if disease %}
+        <h3>Predicted Disease:</h3>
+        <p>{{ disease }}</p>
+
+        <h3>Remedy:</h3>
+        <p>{{ remedy }}</p>
+    {% elif error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+
+    <!-- Mic-to-Text JS for sequential symptom + crop -->
+    <script>
+        function startSequentialSpeech() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Sorry, your browser does not support speech recognition.");
+                return;
+            }
+
+            let recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onresult = function(event) {
+                const symptomText = event.results[0][0].transcript;
+                document.getElementById('symptom').value = symptomText;
+
+                // Now ask for crop
+                let cropRecognition = new webkitSpeechRecognition();
+                cropRecognition.lang = 'en-US';
+                cropRecognition.continuous = false;
+                cropRecognition.interimResults = false;
+
+                cropRecognition.onresult = function(event) {
+                    const cropText = event.results[0][0].transcript;
+                    document.getElementById('crop').value = cropText;
+                };
+
+                cropRecognition.onerror = function(event) {
+                    alert("Crop speech error: " + event.error);
+                };
+
+                alert("Now say the crop name...");
+                cropRecognition.start();
+            };
+
+            recognition.onerror = function(event) {
+                alert("Symptom speech error: " + event.error);
+            };
+
+            alert("Say the symptom...");
+            recognition.start();
+        }
+    </script>
+</body>
+</html>
